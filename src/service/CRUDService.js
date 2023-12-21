@@ -1,15 +1,15 @@
 import bcrypt from 'bcryptjs';
-import db from '../models/index'
+import db from '../models/index';
 
 const salt = bcrypt.genSaltSync(10);
 
 let createNewUser = async (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let hashPasswordFromBcrypt = await hashUserPassword(data.password);
+            let hashPassWordFromBcrypt = await hashUserPassword(data.password)
             await db.User.create({
                 email: data.email,
-                password: hashPasswordFromBcrypt,
+                password: hashPassWordFromBcrypt,
                 firstName: data.firstname,
                 lastName: data.lastname,
                 address: data.address,
@@ -17,8 +17,8 @@ let createNewUser = async (data) => {
                 gender: data.gender === '1' ? true : false,
                 roleId: data.roleId,
             })
+            resolve('create new user succeed');
 
-            resolve('Succeed new user')
         } catch (e) {
             reject(e);
         }
@@ -29,40 +29,43 @@ let createNewUser = async (data) => {
 let hashUserPassword = (password) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let hashPassword = await bcrypt.hashSync("B4c0/\/", salt);
-            resolve(hashPassword)
+            //lưu ý, truyền vào đúng password cần hash
+            // let hashPassWord = await bcrypt.hashSync("B4c0/\/", salt); => copy paste mà ko edit nè
+            let hashPassWord = await bcrypt.hashSync(password, salt);
+
+            resolve(hashPassWord);
         } catch (e) {
             reject(e);
         }
+
     })
 }
 
 let getAllUser = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            let users = db.User.findAll({
+            let users = await db.User.findAll({
                 raw: true,
-            })
+            });
             resolve(users)
-
         } catch (e) {
-            reject(e)
+            reject(e);
         }
     })
 }
 
-let getUserInforById = (userId) => {
+let getUserInfoById = (userId) => {
     return new Promise(async (resolve, reject) => {
         try {
             let user = await db.User.findOne({
                 where: { id: userId },
-                raw: true
-            })
+                raw: true,
+
+            });
 
             if (user) {
                 resolve(user)
-            }
-            else {
+            } else {
                 resolve({})
             }
         } catch (e) {
@@ -75,7 +78,8 @@ let updateUserData = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
             let user = await db.User.findOne({
-                where: { id: data.id }
+                where: { id: data.id },
+
             })
             if (user) {
                 user.firstName = data.firstName;
@@ -83,16 +87,16 @@ let updateUserData = (data) => {
                 user.address = data.address;
 
                 await user.save();
-
                 let allUsers = await db.User.findAll();
                 resolve(allUsers);
-            }
-            else {
+
+            } else {
                 resolve();
+
             }
 
         } catch (e) {
-            console.log(e)
+            console.log(e);
         }
     })
 }
@@ -103,9 +107,9 @@ let deleteUserById = (userId) => {
             let user = await db.User.findOne({
                 where: { id: userId }
             })
-
             if (user) {
                 await user.destroy();
+
             }
 
             resolve();
@@ -115,10 +119,13 @@ let deleteUserById = (userId) => {
         }
     })
 }
+
+
+
 module.exports = {
     createNewUser: createNewUser,
     getAllUser: getAllUser,
-    getUserInforById: getUserInforById,
+    getUserInfoById: getUserInfoById,
     updateUserData: updateUserData,
     deleteUserById: deleteUserById,
 }
